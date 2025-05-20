@@ -544,11 +544,11 @@ export const ROLE_LIST = [ADMIN_ROLE, TEST_ROLE];
 export const DEFAULT_USER = {
 	id: "b34719e1-ce46-457e-9575-99505ecee828",
 	username: "admin",
-	email: "admin@slash.com",
+	email: "11554639@qq.com",
 	avatar: faker.image.avatarGitHub(),
 	createdAt: faker.date.anytime(),
 	updatedAt: faker.date.recent(),
-	password: "demo1234",
+	password: "12345678",
 	role: ADMIN_ROLE,
 	permissions: ADMIN_ROLE.permission,
 };

@@ -1,10 +1,10 @@
-// hooks/useChat.ts
-import { useEffect, useState } from "react";
-import { supabase } from "@/supabase/client";
-import dayjs from "dayjs";
+import {useEffect, useState} from "react";
+import {supabase} from "@/supabase/client";
+import {formatTime} from "@/utils/time.ts";
+import messageService from "@/api/services/messageService";
 
 export interface Message {
-	id: number;
+	id?: number;
 	from_user: string;
 	type: "text" | "image";
 	content: string;
@@ -16,7 +16,7 @@ export interface Conversation {
 	id: string;
 	name: string;
 	status: number;
-	messages: any;
+	messages: Message[];
 	lastMessage: string;
 	lastMessageAt: string;
 }
@@ -46,7 +46,7 @@ export function useChat() {
 		const { data, error } = await supabase
 			.from("conversations")
 			.select("*")
-			.order("last_message_at", { ascending: true });
+			.order("last_message_at", { ascending: false });
 
 		setIsLoading(false);
 		if (error) {
@@ -58,7 +58,7 @@ export function useChat() {
 			id: row.id,
 			name: row.name,
 			status: row.status,
-			lastMessageAt: row.last_message_at,
+			lastMessageAt: formatTime(row.last_message_at).format("MM-DD"),
 			lastMessage: row.last_message,
 			messages: [],
 		}));
@@ -71,6 +71,11 @@ export function useChat() {
 
 	async function loadMessages() {
 		if (!selectedId) return;
+
+		const existing = conversations.find((c) => c.id === selectedId);
+		if (existing && existing.messages.length > 0) {
+			return; // 已经加载过
+		}
 
 		const { data, error } = await supabase
 			.from("messages")
@@ -88,24 +93,33 @@ export function useChat() {
 			from_user: msg.from_user,
 			type: msg.type,
 			content: msg.content,
-			createdAt: dayjs(msg.created_at).format("YYYY-MM-DD HH:mm:ss"),
+			createdAt: msg.created_at,
 		}));
 
 		setConversations((prev) =>
-			prev.map((conv) => (conv.id === selectedId ? { ...conv, messages: newMessages } : conv)),
+			prev.map((conv) =>
+				conv.id === selectedId ? { ...conv, messages: newMessages } : conv
+			)
 		);
 	}
 
-	function updateMessageStatus(conversationId: string, tempId: number, update: Partial<Message>) {
+
+	function updateMessageStatus(conversationId: string, update: Partial<Message>) {
 		setConversations((prev) =>
-			prev.map((conv) =>
-				conv.id === conversationId
-					? {
-							...conv,
-							messages: conv.messages.map((msg: any) => (msg.id === tempId ? { ...msg, ...update } : msg)),
-						}
-					: conv,
-			),
+			prev.map((conv) => {
+				if (conv.id !== conversationId) return conv;
+
+				const lastIdx = conv.messages.length - 1;
+				if (lastIdx < 0) return conv;
+
+				const lastMsg = conv.messages[lastIdx];
+
+				const updatedMessages = [...conv.messages];
+				updatedMessages[lastIdx] = { ...lastMsg, ...update };
+
+				console.log({ ...conv, messages: updatedMessages })
+				return { ...conv, messages: updatedMessages };
+			})
 		);
 	}
 
@@ -118,13 +132,46 @@ export function useChat() {
 		return supabase.storage.from("chat-images").getPublicUrl(data.path).data.publicUrl;
 	}
 
-	async function sendMessage(type: "text" | "image", content: string) {
-		if (!selectedId || !currentUserId || !content.trim()) return;
+	const addNewConversation = (data: any) => {
+		setConversations((prev) => {
+			const newConv: any = {
+				id: data.id,
+				name: data.name,
+				messages: [],
+				status: data.status,
+			};
+			return [newConv, ...prev];
+		});
+	};
 
-		const tempId = Date.now();
+	const appendMessageToConversation = (newMessage: Message,conversationId: string) => {
+		setConversations((prev) => {
+			const updated: Conversation[] = [];
+			let current: Conversation | null = null;
+
+			for (const conv of prev) {
+				if (conv.id === conversationId) {
+					current = {
+						...conv,
+						messages: [...conv.messages, newMessage],
+						lastMessage: newMessage.content,
+						lastMessageAt: newMessage.createdAt,
+					};
+				} else {
+					updated.push(conv);
+				}
+			}
+			return current ? [current, ...updated] : updated;
+		});
+	};
+
+
+	async function sendMessage(type: "text" | "image", content: string, conversationId: string | null) {
+		if (!conversationId || !currentUserId || !content.trim()) return;
+
 
 		const newMessage: Message = {
-			id: tempId,
+			id: new Date().getTime(),
 			from_user: currentUserId,
 			type,
 			content,
@@ -132,52 +179,68 @@ export function useChat() {
 			status: "sending",
 		};
 
-		// setConversations((prev) =>
-		//     prev.map((conv) =>
-		//         conv.id === selectedId
-		//             ? { ...conv, messages: [...conv.messages, newMessage] }
-		//             : conv
-		//     )
-		// );
-		setConversations((prev) => {
-			const updated = prev.map((c) => {
-				if (c.id === selectedId) {
-					return {
-						...c,
-						lastMessage: newMessage.content,
-						lastMessageAt: newMessage.createdAt,
-					};
-				}
-				return c;
-			});
+		appendMessageToConversation(newMessage,conversationId)
 
-			// 把当前会话移到最前面
-			const current = updated.find((c) => c.id === selectedId);
-			const others = updated.filter((c) => c.id !== selectedId);
-			return current ? [current, ...others] : others;
-		});
-
-		const { data, error } = await supabase
-			.from("messages")
-			.insert({
-				conversation_id: selectedId,
-				type,
-				content,
-				from_user: currentUserId,
-			})
-			.select()
-			.single();
+		const { data, error } = await messageService.insertMessage({
+			conversationId,
+			type,
+			content,
+			currentUserId,
+		})
 
 		if (error || !data) {
-			updateMessageStatus(selectedId, tempId, { status: "failed" });
+			updateMessageStatus(conversationId, { status: "failed" });
 			return;
 		}
-		updateMessageStatus(selectedId, tempId, {
+
+		//TODO 应该在此处完成手机调用
+		//......................
+		updateMessageStatus(conversationId, {
 			id: data.id,
 			createdAt: data.created_at,
 			status: "sent",
 		});
+
 	}
+	async function updateConversation(content: string,conversationId: string | null){
+		if (!conversationId) {
+			console.warn("⛔ conversationId 为 null，跳过更新");
+			return;
+		}
+
+		const { data, error } = await supabase
+			.from('conversations')
+			.update({ last_message: content })
+			.eq('id', String(conversationId))
+			.select();
+
+		if (error) {
+			console.error('更新失败:', error);
+		} else if (data.length === 0) {
+			console.warn('⚠️ 更新无效，未找到匹配的会话 ID:', conversationId);
+		} else {
+			console.log('✅ 更新成功:', data);
+		}
+	}
+
+	async function insertConversationByPhone({phoneNumber, message}: {phoneNumber: string,message: string}) {
+		const {token} = await messageService.getGuestToken(phoneNumber);
+		console.log(token)
+		if (!token) throw new Error("Token 中缺少手机号");
+
+		const { data ,error } = await messageService.insertConversation({
+			userId: currentUserId,
+			guestId: token,
+			message,
+			name: phoneNumber
+		});
+		if (error) throw error;
+		const { id } = data
+		addNewConversation(data);
+		setSelectedId(id)
+		await sendMessage("text", message, id);
+	}
+
 
 	return {
 		conversations,
@@ -187,5 +250,7 @@ export function useChat() {
 		sendMessage,
 		uploadImage,
 		isLoading,
+		insertConversationByPhone,
+		updateConversation
 	};
 }

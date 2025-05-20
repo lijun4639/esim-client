@@ -92,6 +92,16 @@
 			"workbench": "工作台",
 			"analysis": "分析",
 			"management": "管理",
+			"message": {
+				"index": "消息管理",
+				"chat": "实时会话",
+				"bulkTask": "群发任务"
+			},
+			"template": {
+				"index": "文案库",
+				"group": "文案模板",
+				"content": "文案内容"
+			},
 			"user": {
 				"index": "用户",
 				"profile": "个人资料",

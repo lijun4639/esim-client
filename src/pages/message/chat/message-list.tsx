@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { ScrollArea } from "@/ui/scroll-area.tsx";
 import { Message } from "./useChat";
-import dayjs from "dayjs";
+import {formatTime} from "@/utils/time.ts";
 
 interface MessageListProps {
 	messages: Message[];
@@ -25,8 +25,8 @@ const MessageList: React.FC<MessageListProps> = ({ messages, currentUserId, onRe
 		<ScrollArea className="h-[calc(100vh-400px)] text-base p-4 bg-gray-100 overflow-y-auto">
 			{messages.map((msg, index: number) => {
 				const isSelf = msg.from_user === currentUserId;
-				const currentTime = dayjs(msg.createdAt);
-				const lastTime = lastTimestamp ? dayjs(lastTimestamp) : null;
+				const currentTime:any = formatTime(msg.createdAt);
+				const lastTime = lastTimestamp ? formatTime(lastTimestamp) : null;
 				const shouldShowTime = !lastTime || currentTime.diff(lastTime, "minute") > TIME_GAP_MINUTES;
 
 				lastTimestamp = msg.createdAt;

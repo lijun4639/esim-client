@@ -138,3 +138,18 @@
   --layout-header-height: 64px;
   --layout-multi-tabs-height: 48px;
 }
+
+
+.css-dev-only-do-not-override-30l6hx.ant-picker .ant-picker-input >input {
+  font-size: 0.875rem !important; /* Tailwind 的 text-sm 是 14px，如果你想更小就写 12px */
+  line-height: 1.65rem
+}
+.ant-picker-dropdown{
+  font-size: 0.875rem !important;
+}
+.ant-radio-group .ant-radio-label{
+  font-size: 0.875rem !important;
+}
+.ant-upload-wrapper {
+  display: block !important;
+}

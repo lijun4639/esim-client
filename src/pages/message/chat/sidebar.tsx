@@ -45,7 +45,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 			{/*<div className="flex pl-3 pt-8 pb-3 flex-col">*/}
 			{/*    <h3 className="text-xl font-medium">实时会话</h3>*/}
 			{/*</div>*/}
-			<div className="p-3">
+			<div className="px-3 py-6">
 				<Input placeholder="搜索会话" value={search} onChange={(e) => setSearch(e.target.value)} />
 			</div>
 
@@ -59,7 +59,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 				</TabsList>
 			</Tabs>
 
-			<ScrollArea className="flex-1 mt-3 overflow-y-auto">
+			<ScrollArea className="h-[calc(100vh-214px)] mt-3 overflow-y-auto">
 				{conversations.map((c) => (
 					<div
 						key={c.id}

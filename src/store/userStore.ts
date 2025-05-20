@@ -63,21 +63,22 @@ export const useSignIn = () => {
 		mutationFn: userService.signin,
 	});
 
-	const signIn = async (data: SignInReq) => {
-		try {
-			const res = await signInMutation.mutateAsync(data);
-			const { user, accessToken, refreshToken } = res;
-			setUserToken({ accessToken, refreshToken });
-			setUserInfo(user);
-			navigatge(HOMEPAGE, { replace: true });
-			toast.success("Sign in success!", {
-				closeButton: true,
-			});
-		} catch (err) {
-			toast.error(err.message, {
+	const signIn = async (params: SignInReq) => {
+		const { data, error }: any = await signInMutation.mutateAsync(params);
+		if (error){
+			toast.error(error.message, {
 				position: "top-center",
 			});
+			return false;
 		}
+		const user = data.user
+		const { access_token, refresh_token } = data.session
+		setUserToken({ accessToken: access_token, refreshToken: refresh_token });
+		setUserInfo(user);
+		navigatge(HOMEPAGE, { replace: true });
+		toast.success("Sign in success!", {
+			closeButton: true,
+		});
 	};
 
 	return signIn;

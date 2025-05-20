@@ -52,3 +52,23 @@ export interface Role {
 	desc?: string;
 	permission?: Permission[];
 }
+
+export interface BulkTasks{
+	id: string;
+	name: string;
+	createdAt: string;
+	status: string;
+	phoneCount: number;
+	replayCount: number;
+	useTemplate: number;
+	templateId?: string;
+	message?: string;
+	runAt: string;
+}
+
+export interface TemplateContent{
+	id: string;
+	content: string;
+	createdAt: string;
+	templateId: string;
+}

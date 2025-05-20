@@ -152,6 +152,15 @@ function FormMessage({ className, ...props }: React.ComponentProps<"p">) {
     </p>
   )
 }
+function FormRequiredLabel({ children }: { children: React.ReactNode }) {
+  return (
+      <FormLabel>
+        {children}
+        <span className="text-red-500 ml-[-5px]">*</span>
+      </FormLabel>
+  );
+}
+
 
 export {
   useFormField,
@@ -162,4 +171,5 @@ export {
   FormDescription,
   FormMessage,
   FormField,
+  FormRequiredLabel,
 }

@@ -20,6 +20,7 @@ const badgeVariants = cva(
 				success: "border-transparent bg-success text-white [a&]:hover:bg-success/90 focus-visible:ring-success/20 dark:focus-visible:ring-success/40 dark:bg-success/60",
 				error: "border-transparent bg-error text-white [a&]:hover:bg-error/90 focus-visible:ring-error/20 dark:focus-visible:ring-error/40 dark:bg-error/60",
 				outline: "text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground",
+                cancel: "bg-gray-300 text-gray-1000 border-transparent py-[0.18rem]"
       },
       overlay: {
         circle: "rounded-full min-w-5 h-5",

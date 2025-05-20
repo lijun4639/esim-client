@@ -11,6 +11,14 @@ const { VITE_APP_HOMEPAGE: HOMEPAGE } = import.meta.env;
 const WorkbenchPage = lazy(() => import("@/pages/dashboard/workbench"));
 const AnalysisPage = lazy(() => import("@/pages/dashboard/analysis"));
 
+// message
+const ChatPage = lazy(() => import("@/pages/message/chat"));
+const BulkTasksPage = lazy(() => import("@/pages/message/bulk-tasks"));
+
+// template
+const TemplateContentPage = lazy(() => import("@/pages/template/content"));
+const TemplateGroupPage = lazy(() => import("@/pages/template/group"));
+
 // custom components
 const AnimatePage = lazy(() => import("@/pages/components/animate"));
 const ScrollPage = lazy(() => import("@/pages/components/scroll"));
@@ -67,6 +75,22 @@ export const dashboardRoutes: RouteObject[] = [
 					{ index: true, element: <WorkbenchPage /> },
 					{ path: "workbench", element: <WorkbenchPage /> },
 					{ path: "analysis", element: <AnalysisPage /> },
+				],
+			},
+			{
+				path: "message",
+				children: [
+					{ index: true, element: <ChatPage /> },
+					{ path: "chat", element: <ChatPage /> },
+					{ path: "bulk-tasks", element: <BulkTasksPage /> },
+				],
+			},
+			{
+				path: "template",
+				children: [
+					{ index: true, element: <TemplateGroupPage /> },
+					{ path: "group", element: <TemplateGroupPage /> },
+					{ path: "content", element: <TemplateContentPage /> },
 				],
 			},
 			{

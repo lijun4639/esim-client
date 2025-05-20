@@ -6,7 +6,7 @@ import userStore from "@/store/userStore";
 import { toast } from "sonner";
 import type { Result } from "#/api";
 import { ResultEnum } from "#/enum";
-
+// const { accessToken } = useUserToken();
 // 创建 axios 实例
 const axiosInstance = axios.create({
 	baseURL: import.meta.env.VITE_APP_BASE_API,
@@ -18,7 +18,9 @@ const axiosInstance = axios.create({
 axiosInstance.interceptors.request.use(
 	(config) => {
 		// 在请求被发送之前做些什么
-		config.headers.Authorization = "Bearer Token";
+		const { userToken } = userStore.getState(); // ✅ 获取全局 store 中的 token
+		const token = userToken?.accessToken;
+		config.headers.Authorization = "Bearer "+token;
 		return config;
 	},
 	(error) => {
@@ -88,4 +90,6 @@ class APIClient {
 		});
 	}
 }
+
+
 export default new APIClient();
