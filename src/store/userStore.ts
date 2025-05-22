@@ -3,7 +3,7 @@ import { useNavigate } from "react-router";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
-import userService, { type SignInReq } from "@/api/services/userService";
+import userService from "@/api/services/userService";
 
 import { toast } from "sonner";
 import type { UserInfo, UserToken } from "#/entity";
@@ -63,22 +63,22 @@ export const useSignIn = () => {
 		mutationFn: userService.signin,
 	});
 
-	const signIn = async (params: SignInReq) => {
-		const { data, error }: any = await signInMutation.mutateAsync(params);
-		if (error){
+	const signIn = async (params: any) => {
+		try {
+			const data: any = await signInMutation.mutateAsync(params);
+			const {user,tokens} = data
+			setUserToken({ accessToken: tokens.accessToken, refreshToken: tokens.refreshToken });
+			setUserInfo(user);
+			navigatge(HOMEPAGE, { replace: true });
+			toast.success("Sign in success!", {
+				closeButton: true,
+			});
+		} catch (error){
 			toast.error(error.message, {
 				position: "top-center",
 			});
-			return false;
 		}
-		const user = data.user
-		const { access_token, refresh_token } = data.session
-		setUserToken({ accessToken: access_token, refreshToken: refresh_token });
-		setUserInfo(user);
-		navigatge(HOMEPAGE, { replace: true });
-		toast.success("Sign in success!", {
-			closeButton: true,
-		});
+
 	};
 
 	return signIn;

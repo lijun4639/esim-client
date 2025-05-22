@@ -31,7 +31,6 @@ export const TASK_STATUS_MAP: Record<string, { label: string; color: "default" |
 	cancelled: { label: "已取消", color: "cancel" },
 };
 const STATUS_SELECT_OPTIONS = [
-	{ value: "all", label: "所有状态" }, // 👈 默认项
 	...Object.entries(TASK_STATUS_MAP).map(([key, val]) => ({
 		value: key,
 		label: val.label,
@@ -104,8 +103,9 @@ export default function BulkTasksPage() {
 		refetch()
 	}
 
-	const handleCancel = (data:any)=>{
-		console.log(data)
+	const handleCancel = async (data:any)=>{
+		await taskService.cancelTask(data.id)
+		refetch()
 	}
 	const columns: ColumnsType<BulkTasks> = [
 		{
@@ -161,7 +161,7 @@ export default function BulkTasksPage() {
 				return(
 					<div className="flex w-full justify-center text-gray">
 						{
-							(record.status === "pending" || "processing") &&
+							(record.status === "pending" || record.status ==="processing") &&
 							<Popconfirm
 								title="取消确认"
 								description="是否要取消此任务?"
@@ -176,7 +176,7 @@ export default function BulkTasksPage() {
 
 						}
 						{
-							// record.status === "processing" &&
+							record.status === "processing" &&
 							<Button
 								className="ml-2"
 								variant="outline"
@@ -245,7 +245,11 @@ export default function BulkTasksPage() {
 
 	const onSearchFormReset = () => {
 		searchForm.reset();
-		setSearchParams({}); // 触发一次空条件查询
+		console.log(searchForm.getValues())
+		setSearchParams({
+			name: '',
+			status: undefined,
+		}); // 触发一次空条件查询
 	};
 
 	const onCreate = () => {
@@ -293,16 +297,15 @@ export default function BulkTasksPage() {
 								render={({ field }) => (
 									<FormItem className="flex items-center gap-2">
 										<FormLabel className="w-10 text-right shrink-0">状态</FormLabel>
-										<Select onValueChange={field.onChange} value={field.value ?? "all"}>
-											<SelectTrigger className="w-[180px]">
+										<Select clearable onValueChange={field.onChange} value={field.value}>
+											<SelectTrigger  className="w-[180px]">
 												<SelectValue>
-													{field.value && field?.value !== "all" ? (
+													{
+														!!field.value &&
 														<Badge variant={TASK_STATUS_MAP[field.value]?.color}>
 															{TASK_STATUS_MAP[field.value]?.label}
 														</Badge>
-													) : (
-														<span className="text-muted-foreground">所有状态</span>
-													)}
+													}
 												</SelectValue>
 											</SelectTrigger>
 											<SelectContent>
@@ -340,7 +343,7 @@ export default function BulkTasksPage() {
 				</CardHeader>
 				<CardContent>
 					<Table
-						// rowKey="id"
+						rowKey="id"
 						size="small"
 						scroll={{ x: "max-content" }}
 						pagination={{

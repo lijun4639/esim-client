@@ -1,55 +1,43 @@
-import apiClient from "../apiClient";
-import { supabase } from '@/supabase/client'
+import apiClient from '../apiClient';
 
-
-import type { UserInfo, UserToken } from "#/entity";
-
-export interface SignInReq {
+interface LoginParams {
 	email: string;
 	password: string;
 }
 
-export interface SignUpReq extends SignInReq {
-	// email: string;
-}
-export type SignInRes = UserToken & { user: UserInfo };
-
-const esimFunUrl = "http://localhost:3000";
-export enum UserApi {
-	// SignIn = "/auth/signin",
-	SignUp = "/auth/signup",
-	Logout = "/auth/logout",
-	Refresh = "/auth/refresh",
-	User = "/user",
-	FunGuestToken = esimFunUrl+"/generate-token",
+interface LoginResult {
+	user: any;
 }
 
-const signin = (data: SignInReq) =>{
-	return supabase.auth.signInWithPassword(data)
-	// return apiClient.post<SignInRes>({ url: UserApi.SignIn, data});
+interface RefreshResult {
+	user: any;
 }
 
+const signin = async (data: LoginParams): Promise<LoginResult> => {
+	return apiClient.post({url:'/auth/login', data});
+};
 
-const signup = () =>{
-	return supabase.auth.signUp({
-		email: '11554639@qq.com',
-		password: '12345678',
-		options: {
-			data: {
-				username: 'superadmin'
-			}
-		}
-	})
-	// apiClient.post<SignInRes>({ url: UserApi.SignUp, data });
+const signup = async (params: LoginParams): Promise<LoginResult> => {
+	return apiClient.post({url:'/auth/signup', params});
+}
+const getUserInfo = async (params: LoginParams): Promise<LoginResult> => {
+	return apiClient.get({url:'/auth/user', params});
 }
 
-const logout = () => apiClient.get({ url: UserApi.Logout });
-const findById = (id: string) =>
-	apiClient.get<UserInfo[]>({ url: `${UserApi.User}/${id}` });
+const refresh = async (): Promise<RefreshResult> => {
+	return apiClient.post({
+		url: '/auth/refresh',
+	});
+};
+
+const logout = async (): Promise<void> => {
+	return apiClient.post({url: '/auth/logout'});
+};
 
 export default {
 	signin,
 	signup,
-	findById,
+	getUserInfo,
+	refresh,
 	logout,
 };

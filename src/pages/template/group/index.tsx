@@ -194,9 +194,13 @@ export default function TemplateGroupPage() {
 								render={({ field }) => (
 									<FormItem className="flex items-center gap-2">
 										<FormLabel className="w-10 text-right shrink-0">状态</FormLabel>
-										<Select onValueChange={field.onChange} value={field.value}>
+										<Select clearable onValueChange={field.onChange} value={field.value}>
 											<SelectTrigger className="w-[180px]">
-												<SelectValue placeholder="选择状态" />
+												{
+													!!field.value &&
+													<SelectValue placeholder="选择状态" />
+												}
+
 											</SelectTrigger>
 											<SelectContent>
 												<SelectItem value="1">

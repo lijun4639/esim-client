@@ -52,25 +52,6 @@ const insertConversation: any = ({
 };
 
 
-const insertMessage: any = ({
-    conversationId,
-    type,
-    content,
-    currentUserId
-}: any)=>{
-    return supabase
-        .from("messages")
-        .insert({
-            conversation_id: conversationId,
-            type,
-            content,
-            from_user: currentUserId,
-        })
-        .select()
-        .single();
-}
-
-
 // 获取匿名用户 token
 const getGuestToken = (phoneNumber: string) => {
     return apiClient.post<any>({
@@ -129,7 +110,7 @@ const getMessageList = (params: {
     pageSize?: number;
 }) => {
     return apiClient.get({
-        url: "/message",
+        url: "/chat/message",
         params,
     });
 };
@@ -137,7 +118,7 @@ const getMessageList = (params: {
 // 统计消息数量（必须传 conversationId）
 const countMessages = (params: { conversationId: string }) => {
     return apiClient.get({
-        url: "/message/count",
+        url: "/chat/message/count",
         params,
     });
 };
@@ -145,12 +126,11 @@ const countMessages = (params: { conversationId: string }) => {
 // 创建消息
 const createMessage = (data: {
     conversationId: string;
-    messageType: "text" | "image";
     content: string;
-    guestId?: string;
+    type: string;
 }) => {
     return apiClient.post({
-        url: "/message",
+        url: "/chat/message",
         data,
     });
 };
@@ -162,7 +142,7 @@ const updateMessage = (id: number | string, data: Partial<{
     guestId?: string;
 }>) => {
     return apiClient.put({
-        url: `/message/${id}`,
+        url: `/chat/message/${id}`,
         data,
     });
 };
@@ -170,14 +150,15 @@ const updateMessage = (id: number | string, data: Partial<{
 // 删除消息（需要传 id）
 const deleteMessage = (id: number | string) => {
     return apiClient.delete({
-        url: `/message/${id}`,
+        url: `/chat/message/${id}`,
     });
 };
 
 
+
+
 export default {
     insertConversation,
-    insertMessage,
     getGuestToken,
 
     getConversationList,

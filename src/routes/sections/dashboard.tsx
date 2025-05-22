@@ -50,12 +50,6 @@ const Calendar = lazy(() => import("@/pages/sys/others/calendar"));
 const Kanban = lazy(() => import("@/pages/sys/others/kanban"));
 const Blank = lazy(() => import("@/pages/sys/others/blank"));
 
-// menu level
-const MenuLevel1a = lazy(() => import("@/pages/menu-level/menu-level-1a"));
-const MenuLevel2a = lazy(() => import("@/pages/menu-level/menu-level-1b/menu-level-2a"));
-const MenuLevel3a = lazy(() => import("@/pages/menu-level/menu-level-1b/menu-level-2b/menu-level-3a"));
-const MenuLevel3b = lazy(() => import("@/pages/menu-level/menu-level-1b/menu-level-2b/menu-level-3b"));
-
 export const dashboardRoutes: RouteObject[] = [
 	{
 		path: "/",
@@ -145,28 +139,6 @@ export const dashboardRoutes: RouteObject[] = [
 					{ path: "403", element: <Page403 /> },
 					{ path: "404", element: <Page404 /> },
 					{ path: "500", element: <Page500 /> },
-				],
-			},
-			{
-				path: "menu_level",
-				children: [
-					{ index: true, element: <Navigate to="menu_level_1a" replace /> },
-					{ path: "menu_level_1a", element: <MenuLevel1a /> },
-					{
-						path: "menu_level_1b",
-						children: [
-							{ index: true, element: <Navigate to="menu_level_2a" replace /> },
-							{ path: "menu_level_2a", element: <MenuLevel2a /> },
-							{
-								path: "menu_level_2b",
-								children: [
-									{ index: true, element: <Navigate to="menu_level_3a" replace /> },
-									{ path: "menu_level_3a", element: <MenuLevel3a /> },
-									{ path: "menu_level_3b", element: <MenuLevel3b /> },
-								],
-							},
-						],
-					},
 				],
 			},
 			{

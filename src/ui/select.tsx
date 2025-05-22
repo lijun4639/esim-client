@@ -1,13 +1,44 @@
 import * as React from "react"
 import * as SelectPrimitive from "@radix-ui/react-select"
-import { CheckIcon, ChevronDownIcon, ChevronUpIcon } from "lucide-react"
+import {CheckIcon, ChevronDownIcon, ChevronUpIcon, CircleX} from "lucide-react"
 
 import { cn } from "@/utils"
 
 function Select({
+                  value,
+                  onValueChange,
+                  clearable = false,
+                  children,
   ...props
-}: React.ComponentProps<typeof SelectPrimitive.Root>) {
-  return <SelectPrimitive.Root data-slot="select" {...props} />
+}: React.ComponentProps<typeof SelectPrimitive.Root> &
+    {
+      value?: string;
+      onValueChange?: (val: string) => void;
+      clearable?: boolean;
+    }) {
+  return     <SelectPrimitive.Root value={value} onValueChange={onValueChange} {...props}>
+    <div className="relative">
+        {children}
+
+      {(clearable && value) ? (
+          <button
+              type="button"
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              onClick={(e) => {
+                e.stopPropagation();
+                onValueChange?.('');
+              }}
+          >
+            <CircleX className="size-3.5" />
+          </button>
+      ):
+          <SelectPrimitive.Icon asChild>
+            <ChevronDownIcon className="size-4 opacity-50 absolute right-2 top-1/2 -translate-y-1/2" />
+          </SelectPrimitive.Icon>
+      }
+    </div>
+
+  </SelectPrimitive.Root>
 }
 
 function SelectGroup({
@@ -41,9 +72,7 @@ function SelectTrigger({
       {...props}
     >
       {children}
-      <SelectPrimitive.Icon asChild>
-        <ChevronDownIcon className="size-4 opacity-50" />
-      </SelectPrimitive.Icon>
+
     </SelectPrimitive.Trigger>
   )
 }

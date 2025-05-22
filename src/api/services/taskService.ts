@@ -27,8 +27,15 @@ const updateTask = (id: string, data: any) => {
     });
 };
 
+const cancelTask = (id: string) => {
+    return apiClient.put({
+        url: `/task/cancel/${id}`,
+    });
+};
+
 export default {
     getTaskList,
     createTask,
     updateTask,
+    cancelTask,
 };

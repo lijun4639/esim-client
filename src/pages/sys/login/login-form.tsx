@@ -1,5 +1,4 @@
 import { DEFAULT_USER } from "@/_mock/assets";
-import type { SignInReq } from "@/api/services/userService";
 import { Icon } from "@/components/icon";
 import { useSignIn } from "@/store/userStore";
 import { Button } from "@/ui/button";
@@ -21,7 +20,7 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
 	const { loginState, setLoginState } = useLoginStateContext();
 	const signIn = useSignIn();
 
-	const form = useForm<SignInReq>({
+	const form = useForm<any>({
 		defaultValues: {
 			email: DEFAULT_USER.email,
 			password: DEFAULT_USER.password,
@@ -30,7 +29,7 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
 
 	if (loginState !== LoginStateEnum.LOGIN) return null;
 
-	const handleFinish = async (values: SignInReq) => {
+	const handleFinish = async (values: any) => {
 		setLoading(true);
 		try {
 			await signIn(values);

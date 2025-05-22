@@ -6,12 +6,15 @@ import userStore from "@/store/userStore";
 import { toast } from "sonner";
 import type { Result } from "#/api";
 import { ResultEnum } from "#/enum";
+import userService from "@/api/services/userService.ts";
+import {removeEmptyParams} from "@/utils/clean.ts";
 // const { accessToken } = useUserToken();
 // 创建 axios 实例
 const axiosInstance = axios.create({
 	baseURL: import.meta.env.VITE_APP_BASE_API,
 	timeout: 50000,
 	headers: { "Content-Type": "application/json;charset=utf-8" },
+	withCredentials: true,
 });
 
 // 请求拦截
@@ -21,6 +24,9 @@ axiosInstance.interceptors.request.use(
 		const { userToken } = userStore.getState(); // ✅ 获取全局 store 中的 token
 		const token = userToken?.accessToken;
 		config.headers.Authorization = "Bearer "+token;
+		if (config.params) {
+			config.params = removeEmptyParams(config.params);
+		}
 		return config;
 	},
 	(error) => {
@@ -44,15 +50,39 @@ axiosInstance.interceptors.response.use(
 		// 业务请求错误
 		throw new Error(message || t("sys.api.apiRequestFailed"));
 	},
-	(error: AxiosError<Result>) => {
-		const { response, message } = error || {};
+	async (error: AxiosError<Result>) => {
+		const { response, message, config  } = error || {};
+		const status = response?.status;
+
+		const originalRequest = config as AxiosRequestConfig & { _retry?: boolean };
+		if (status === 401 && !originalRequest._retry) {
+			originalRequest._retry = true;
+
+			try {
+				const {tokens}: any = await userService.refresh();
+				console.log("newData")
+				console.log(tokens)
+
+				// 更新 token
+				userStore.getState().actions.setUserToken({accessToken: tokens.accessToken, refreshToken: tokens.refreshToken});
+
+				// 重试原请求
+				originalRequest.headers = {
+					...originalRequest.headers,
+					Authorization: "Bearer " + tokens.accessToken,
+				};
+				return axiosInstance(originalRequest);
+			} catch (refreshErr) {
+				userStore.getState().actions.clearUserInfoAndToken();
+			}
+		}
+
 
 		const errMsg = response?.data?.message || message || t("sys.api.errorMessage");
 		toast.error(errMsg, {
 			position: "top-center",
 		});
 
-		const status = response?.status;
 		if (status === 401) {
 			userStore.getState().actions.clearUserInfoAndToken();
 		}
