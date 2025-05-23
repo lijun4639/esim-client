@@ -13,5 +13,6 @@ export interface Conversation {
     status: number;
     lastMessage: string;
     lastMessageAt: string;
-    is_unread: boolean;
+    isUnread: boolean;
+    guestId: string;
 }

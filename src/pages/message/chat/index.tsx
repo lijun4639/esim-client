@@ -1,10 +1,11 @@
-import {useMemo, useState} from "react";
+import {useEffect, useMemo, useRef, useState} from "react";
 import Sidebar from "./sidebar/index.tsx";
 import MessageList from "./message-list";
 import ChatInput from "./chat-input";
 import {useConversationMessagesCache} from "./useConversationMessagesCache.ts";
 import {supabase} from "@/supabase/client.ts";
 import userStore from "@/store/userStore.ts";
+import {useWebSocket} from "@/hooks/common/useWebSocket.ts";
 
 export interface Message {
 	id?: number;
@@ -14,11 +15,15 @@ export interface Message {
 	createdAt: string;
 	status?: "sending" | "sent" | "failed";
 	guestId?: string;
+	conversationId?: string;
 }
 
 export default function Chat() {
 	const [selected, setSelected] = useState<any>(null);
 	const {userInfo} = userStore.getState()
+	const selectedIdRef = useRef<string | null>(null);
+	const sidebarRef = useRef<any>(null);
+
 	const selectedId = useMemo(() => {
 		if (selected) {
 			return selected.id;
@@ -26,30 +31,43 @@ export default function Chat() {
 		return null;
 	}, [selected])
 
+	useEffect(() => {
+		// 闭包陷阱，在websocket中导致 selectedIdRef 始终是 null
+		selectedIdRef.current = selectedId;
+	}, [selectedId]);
+
 	const {
 		messages,
 		loadMore,
 		hasMore,
 		loading,
-		sendMessage
+		sendMessage,
+		appendMessage,
 	} = useConversationMessagesCache(selectedId,userInfo.id);
 
-	// async function handleSendText(text: string) {
-	// 	await sendMessage("text", text, selected.id);
-	// 	// 如果是聊天中，发完消息需要更新conversation的最后一次时间和最后一次消息方便列表展示，如果是新增一个会话则不需要
-	// 	await updateConversation(text ,selected.id);
-	// }
-	//
-	// async function handleSendImage(file: File) {
-	// 	const publicUrl = await uploadImage(file);
-	// 	if (!publicUrl) {
-	// 		console.error("图片上传失败");
-	// 		return;
-	// 	}
-	// 	await sendMessage("image", publicUrl, selected.id);
-	// 	// 如果是聊天中，发完消息需要更新conversation的最后一次时间和最后一次消息方便列表展示，如果是新增一个会话则不需要
-	// 	await updateConversation("[图片]",selected.id)
-	// }
+	useWebSocket(userInfo.id as string, (msg) => {
+		console.log(msg)
+		if (msg.type === 'web-chat-message') {
+			const newMessage: any = msg.payload;
+			const currentSelectedId = selectedIdRef.current;
+			if (newMessage.conversationId === currentSelectedId) {
+				// ✅ 当前正在查看的会话
+				appendMessage(currentSelectedId,{
+					...newMessage,
+					status: "sent",
+				});
+			} else {
+				// ✅ 非当前会话，可能要显示未读红点
+				sidebarRef.current?.markIsUnRead?.(newMessage.conversationId,true);
+			}
+
+			// ✅ 更新 Sidebar 中对应会话的 lastMessage 和 lastMessageAt
+			sidebarRef.current?.updateConversationById?.(newMessage.conversationId, {
+				lastMessage: newMessage.content,
+				status: 0,
+			});
+		}
+	});
 	async function uploadImage(file: File): Promise<string | null> {
 		const filename = `${Date.now()}-${file.name}`;
 		const { data, error } = await supabase.storage.from("chat-images").upload(`user-123/${filename}`, file);
@@ -61,6 +79,7 @@ export default function Chat() {
 	return (
 		<div className="grid h-[calc(100vh-90px)] grid-cols-[280px_1fr] border  text-sm font-sans overflow-hidden">
 			<Sidebar
+				ref={sidebarRef}
 				onSelected={setSelected}
 			/>
 			<div className="relative flex flex-col h-full">
@@ -78,6 +97,7 @@ export default function Chat() {
 						selected={selected}
 					/>
 					<ChatInput
+						selected={selected}
 						onSend={async (type, content) => {
 							if (type === "image" && content instanceof File) {
 								const url = await uploadImage(content);
@@ -85,6 +105,7 @@ export default function Chat() {
 							} else if (type === "text" && typeof content === "string") {
 								sendMessage("text", content);
 							}
+							sidebarRef.current?.updateConversationById(selectedId, {lastMessage: content,status:1});
 						}}
 					/>
 				</div>

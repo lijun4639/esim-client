@@ -39,7 +39,7 @@ export default function SidebarHeader({
                 className="mb-4"
             />
             <Tabs value={tab} onValueChange={onTabChange}>
-                <TabsList className="grid grid-cols-4 text-xs">
+                <TabsList className="grid grid-cols-4 text-base">
                     {statusTabs.map((item) => (
                         <TabsTrigger key={item.value} value={item.value}>
                             {item.label}

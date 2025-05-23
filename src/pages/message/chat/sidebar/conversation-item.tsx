@@ -36,27 +36,26 @@ export default function ConversationItem({
                 onClick={onSelect}
                 onContextMenu={handleContextMenu}
                 className={cn(
-                    "relative px-3 py-2 cursor-pointer border-b hover:bg-gray-100 group flex items-start",
+                    "relative px-3 py-3 cursor-pointer border-b hover:bg-gray-100 group flex text-base items-start",
                     selected && "bg-gray-200"
                 )}
             >
-                <div className="relative w-10 h-10 rounded-full bg-gray-300 flex-shrink-0 mr-3">
-                    {conversation.is_unread && (
+                <div className="relative w-10 h-10 rounded-full border-1 shadow-[0_2px_10px_rgba(0,0,0,0.08)] flex justify-center items-center flex-shrink-0 mr-3">
+                    {conversation.isUnread && (
                         <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full" />
                     )}
+                    {conversation.guestId ? conversation.guestId.slice(-1) : ""}
                 </div>
 
                 <div className="flex-1 overflow-hidden">
-                    <div className="flex justify-between text-sm font-medium">
+                    <div className="flex justify-between font-medium">
                         <span className="truncate">{conversation.name}</span>
-                        <span className="text-xs text-gray-400">
-              {conversation.lastMessageAt}
-            </span>
+                        <span className="text-sm pt-[2px] text-gray-400">{conversation.lastMessageAt}</span>
                     </div>
-                    <div className="text-xs mt-1 text-gray-500 truncate">
+                    <div className="text-sm mt-1 text-gray-500 truncate">
                         {conversation.lastMessage || "无消息"}
                     </div>
-                    <div className="flex justify-between">
+                    <div className="flex mt-1 ml-[-5px] justify-between">
                         <Tag
                             className="mt-1"
                             style={{ fontWeight: 400 }}

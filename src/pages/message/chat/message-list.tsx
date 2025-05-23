@@ -2,8 +2,7 @@ import React, { useEffect, useRef } from "react";
 import { ScrollArea } from "@/ui/scroll-area.tsx";
 import { Message } from "./index.tsx";
 import { formatTime } from "@/utils/time.ts";
-
-
+import { cn } from "@/utils";
 
 interface MessageListProps {
 	selected: any;
@@ -17,6 +16,7 @@ interface MessageListProps {
 const TIME_GAP_MINUTES = 180;
 
 const MessageList: React.FC<MessageListProps> = ({
+													 selected,
 													 messages,
 													 onResend,
 													 onLoadMore,
@@ -25,21 +25,35 @@ const MessageList: React.FC<MessageListProps> = ({
 												 }) => {
 	const bottomRef = useRef<HTMLDivElement>(null);
 	const scrollRef = useRef<HTMLDivElement>(null);
+	const shouldAutoScrollRef = useRef(true);
 
-	// ✅ 自动滚动到底部
+	// ✅ 自动滚动到底部（前提是允许自动滚动）
 	useEffect(() => {
-		bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+		if (shouldAutoScrollRef.current) {
+			bottomRef.current?.scrollIntoView({ behavior: "auto" });
+		}
 	}, [messages]);
-
-	// ✅ 滚动到顶部加载更多
+	useEffect(() => {
+		// 切换会话时强制滚动到底部
+		bottomRef.current?.scrollIntoView({ behavior: "auto" });
+		shouldAutoScrollRef.current = true;
+	}, [selected?.id]);
+	// ✅ 滚动到顶部加载更多，且判断是否到底部
 	useEffect(() => {
 		const el = scrollRef.current;
 		if (!el || !hasMore || loading) return;
 
 		const handleScroll = () => {
-			if (el.scrollTop < 50 && onLoadMore) {
+			// 触发加载更多
+			if (el.scrollTop < 50) {
+				shouldAutoScrollRef.current = false; // ❌ 加载更多时禁止自动滚动
 				onLoadMore();
 			}
+
+			// 判断是否接近底部
+			const isAtBottom =
+				el.scrollHeight - el.scrollTop - el.clientHeight < 50;
+			shouldAutoScrollRef.current = isAtBottom;
 		};
 
 		el.addEventListener("scroll", handleScroll);
@@ -50,8 +64,13 @@ const MessageList: React.FC<MessageListProps> = ({
 
 	return (
 		<ScrollArea
-			ref={scrollRef}
-			className="h-[calc(100vh-400px)] text-base p-4 bg-gray-100 overflow-y-auto"
+			viewportRef={scrollRef}
+			className={cn(
+				"text-base p-4 bg-gray-100 overflow-y-auto",
+				selected?.status === 2
+					? "h-[calc(100vh-290px)]"
+					: "h-[calc(100vh-400px)]"
+			)}
 		>
 			{loading && (
 				<div className="text-center text-xs text-gray-500 mb-2">加载中...</div>
@@ -75,11 +94,13 @@ const MessageList: React.FC<MessageListProps> = ({
 						)}
 
 						<div
-							className={`flex items-start gap-2 ${isSelf ? "justify-end" : "justify-start"} mb-5`}
+							className={`flex items-start gap-2 ${
+								isSelf ? "justify-end" : "justify-start"
+							} mb-5`}
 						>
 							{!isSelf && (
-								<div className="w-8 h-8 bg-yellow-300 rounded-full flex items-center justify-center text-xs font-bold">
-									{msg.guestId}
+								<div className="w-10 h-10 bg-yellow-300 rounded-full flex items-center justify-center text-xs font-bold">
+									{msg.guestId ? msg.guestId.slice(-1) : ""}
 								</div>
 							)}
 
@@ -92,7 +113,9 @@ const MessageList: React.FC<MessageListProps> = ({
 									}`}
 								>
 									{msg.type === "text" ? (
-										<p className="whitespace-pre-wrap break-words">{msg.content}</p>
+										<p className="whitespace-pre-wrap break-words break-all text-left">
+											{msg.content}
+										</p>
 									) : (
 										<img
 											src={msg.content}
@@ -118,7 +141,7 @@ const MessageList: React.FC<MessageListProps> = ({
 							</div>
 
 							{isSelf && (
-								<div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-xs font-bold">
+								<div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center text-xs font-bold">
 									我
 								</div>
 							)}

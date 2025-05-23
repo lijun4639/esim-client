@@ -32,7 +32,7 @@ export function useConversationMessagesCache(conversationId: string | null, curr
             const res = await messageService.getMessageList({
                 conversationId,
                 page: current.page,
-                pageSize: 20,
+                pageSize: 15,
             });
 
             const newList = res.list || [];
@@ -42,7 +42,7 @@ export function useConversationMessagesCache(conversationId: string | null, curr
                 [conversationId]: {
                     messages: [...newList, ...current.messages],
                     page: current.page + 1,
-                    hasMore: newList.length === 20,
+                    hasMore: newList.length === 15,
                     loading: false,
                 },
             }));
@@ -54,7 +54,7 @@ export function useConversationMessagesCache(conversationId: string | null, curr
         }
     };
 
-    const appendMessage = (msg: Message) => {
+    const appendMessage = (conversationId:string | null,msg: Message) => {
         if (!conversationId) return;
         setCache(prev => {
             const existing = prev[conversationId] ?? {
@@ -122,7 +122,7 @@ export function useConversationMessagesCache(conversationId: string | null, curr
             createdAt: new Date().toISOString(),
             status: "sending",
         };
-        appendMessage(tempMsg);
+        appendMessage(conversationId,tempMsg);
         try {
             const data = await messageService.createMessage({
                 conversationId,

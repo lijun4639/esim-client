@@ -20,6 +20,7 @@ import {usePagination} from "@/hooks/common/usePagination.ts";
 import ProgressModal from "./progress-modal";
 import DetailModal from "./detail-modal.tsx";
 import {Popconfirm} from "antd";
+import {useRouter} from "@/routes/hooks";
 
 type SearchFormFieldType = Pick<BulkTasks, "name" | "status">;
 
@@ -39,6 +40,7 @@ const STATUS_SELECT_OPTIONS = [
 ];
 
 export default function BulkTasksPage() {
+	const router = useRouter();
 	const [searchParams, setSearchParams] = useState<Partial<SearchFormFieldType>>({});
 	const searchForm = useForm<SearchFormFieldType>({
 		defaultValues: {
@@ -56,7 +58,7 @@ export default function BulkTasksPage() {
 	const [TaskModalPros, setTaskModalProps] = useState<any>({
 		formValue: {
 			name: "",
-			status: "all",
+			status: "",
 		},
 		title: "新增任务",
 		show: false,
@@ -128,14 +130,22 @@ export default function BulkTasksPage() {
 			render:(_text, _record: any)=>{
 				if(_text === 1){
 					const templateName = templateOptions.find((opt) => opt.value === _record.templateId)?.label || "-"
-					return <span>{templateName}</span>
+					return (
+						<div
+							className=" underline font-bold cursor-pointer"
+							onClick={() => router.push(`/template/content?templateId=${_record.templateId}`)}
+						>
+							<Icon className="mr-2" icon="solar:link-bold" size={14} />
+							{templateName}
+						</div>
+					)
 				}else {
 					return <span>{_record.message}</span>
 				}
 			}
 		},
 		{ title: "目标数量", dataIndex: "phoneCount" },
-		{ title: "回复数量", dataIndex: "replayCount" },
+		{ title: "回复数量", dataIndex: "replyCount" },
 		{
 			title: "状态",
 			dataIndex: "status",
@@ -148,6 +158,7 @@ export default function BulkTasksPage() {
 		{
 			title: "创建时间",
 			dataIndex: "createdAt",
+			width: 180,
 			render: (text: string) => formatTime(text,FULL_TIME),
 			sorter: (a:any, b:any) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
 		},

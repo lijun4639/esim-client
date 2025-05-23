@@ -1,13 +1,13 @@
 import SidebarHeader from "./sidebar-header.tsx";
 import ConversationList from "./conversation-list.tsx";
 import { useChatConversations } from "./useChatConversations";
-import {useEffect, useState} from "react";
+import {forwardRef, useEffect, useImperativeHandle, useState} from "react";
 
 interface Props {
     onSelected: (data:any) => void;
 }
 
-export default function Sidebar(props: Props) {
+const Sidebar = forwardRef((props: Props,ref)=> {
     const { onSelected} = props;
 
     const [tab, setTab] = useState("-1");
@@ -21,10 +21,16 @@ export default function Sidebar(props: Props) {
         hasMore,
         archiveConversation,
         loading,
+        updateConversationById,
+        markIsUnRead,
     } = useChatConversations({
         tab: tab,
         keyword: search,
     });
+    useImperativeHandle(ref, () => ({
+        updateConversationById,
+        markIsUnRead,
+    }));
 
     useEffect(() => {
         // 默认选中第一个
@@ -37,6 +43,13 @@ export default function Sidebar(props: Props) {
             onSelected(selectedItem);
         }
     }, [list, selectedId]);
+
+    useEffect(() => {
+        if(selectedId){
+
+            markIsUnRead(selectedId,false)
+        }
+    },[selectedId])
 
     return (
         <div className="border-r border-gray-200 flex flex-col">
@@ -58,4 +71,5 @@ export default function Sidebar(props: Props) {
             />
         </div>
     );
-}
+})
+export default Sidebar;

@@ -38,7 +38,7 @@ export function useChatConversations({ tab, keyword }: UseChatParams) {
 
     // ✅ 分页加载：仅 tab === "2" 时启用
     const closedHook = usePaginatedLoader<Conversation>({
-        query: { status: 3 },
+        query: { status: 2 },
         fetchFn: messageService.getConversationList,
         pageSize: 20,
         autoLoad: true,
@@ -62,10 +62,14 @@ export function useChatConversations({ tab, keyword }: UseChatParams) {
         return base;
     }, [tab, keyword, activeAll]);
 
-    const closedList = closedHook?.data ?? [];
-
+    const closedList = useMemo(() => {
+        return (closedHook?.data ?? []).map(item => ({
+            ...item,
+            lastMessageAt: item.lastMessageAt ? formatTime(item.lastMessageAt, "MM-DD") : null,
+        }));
+    }, [closedHook?.data]);
+    // const closedList = closedHook?.data ?? [];
     const list = tab === "2" ? closedList : activeList;
-
     const loadMore = () => {
         if (tab === "2") closedHook?.loadMore();
     };
@@ -83,16 +87,33 @@ export function useChatConversations({ tab, keyword }: UseChatParams) {
         }
     };
 
-    const markAsRead = async (id: string) => {
+    const markIsUnRead = async (id: string,isUnread=false) => {
         const index = activeAll.findIndex(c => c.id === id);
-        if (index !== -1 && activeAll[index].is_unread) {
-            await messageService.updateConversation(id, { is_unread: false });
+        if (index !== -1) {
+            // 标记为未读已经在服务器推送数据的时候改了数据库了，只有未读变成已读才需要在客户端执行
+            if(!isUnread) {
+                await messageService.updateConversation(id, { isUnread: isUnread });
+            }
             setActiveAll(prev =>
                 prev.map(c =>
-                    c.id === id ? { ...c, is_unread: false } : c
+                    c.id === id ? { ...c, isUnread: isUnread } : c
                 )
             );
         }
+    };
+
+    const updateConversationById = (id: string, updates: Partial<Conversation>) => {
+        setActiveAll(prev => {
+            const updatedList = prev.map(c =>
+                c.id === id ? { ...c, ...updates, lastMessageAt: formatTime(new Date(), "MM-DD") } : c
+            );
+
+            const idx = updatedList.findIndex(c => c.id === id);
+            if (idx === -1) return updatedList;
+
+            const [target] = updatedList.splice(idx, 1);
+            return [target, ...updatedList];
+        });
     };
 
     return {
@@ -102,6 +123,7 @@ export function useChatConversations({ tab, keyword }: UseChatParams) {
         loading,
         refresh,
         archiveConversation,
-        markAsRead,
+        markIsUnRead,
+        updateConversationById,
     };
 }

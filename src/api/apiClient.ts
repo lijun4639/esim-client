@@ -54,38 +54,47 @@ axiosInstance.interceptors.response.use(
 		const { response, message, config  } = error || {};
 		const status = response?.status;
 
-		const originalRequest = config as AxiosRequestConfig & { _retry?: boolean };
-		if (status === 401 && !originalRequest._retry) {
-			originalRequest._retry = true;
+		if (status === 401) {
+			const originalRequest = config as AxiosRequestConfig & { _retry?: boolean };
 
-			try {
-				const {tokens}: any = await userService.refresh();
-				console.log("newData")
-				console.log(tokens)
+			if (!originalRequest._retry) {
+				originalRequest._retry = true;
+				try {
+					const { tokens }: any = await userService.refresh();
+					userStore.getState().actions.setUserToken({
+						accessToken: tokens.accessToken,
+						refreshToken: tokens.refreshToken,
+					});
 
-				// 更新 token
-				userStore.getState().actions.setUserToken({accessToken: tokens.accessToken, refreshToken: tokens.refreshToken});
-
-				// 重试原请求
-				originalRequest.headers = {
-					...originalRequest.headers,
-					Authorization: "Bearer " + tokens.accessToken,
-				};
-				return axiosInstance(originalRequest);
-			} catch (refreshErr) {
-				userStore.getState().actions.clearUserInfoAndToken();
+					// 重试原请求
+					originalRequest.headers = {
+						...originalRequest.headers,
+						Authorization: "Bearer " + tokens.accessToken,
+					};
+					return axiosInstance(originalRequest);
+				} catch (refreshErr) {
+					// 只有 refresh 失败时才清除用户并提示
+					userStore.getState().actions.clearUserInfoAndToken();
+					toast.error(t("sys.api.tokenExpired"), {
+						position: "top-center",
+					});
+					return Promise.reject(refreshErr);
+				}
 			}
+
+			// refresh 失败后仍是 401，再提示
+			toast.error(t("sys.api.tokenExpired"), {
+				position: "top-center",
+			});
+			userStore.getState().actions.clearUserInfoAndToken();
+			return Promise.reject(error);
 		}
 
-
+		// 对其他非 401 错误，统一提示
 		const errMsg = response?.data?.message || message || t("sys.api.errorMessage");
 		toast.error(errMsg, {
 			position: "top-center",
 		});
-
-		if (status === 401) {
-			userStore.getState().actions.clearUserInfoAndToken();
-		}
 		return Promise.reject(error);
 	},
 );
