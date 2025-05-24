@@ -10,21 +10,24 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useQuery } from "@tanstack/react-query";
 import Table, { type ColumnsType } from "antd/es/table";
 // import type { TableRowSelection } from "antd/es/table/interface";
-import {useEffect, useState} from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import type { BulkTasks } from "#/entity";
 import TaskModal from "./task-modal";
-import {useTemplateStore} from "@/store/templateStore.ts";
-import {formatTime, FULL_TIME} from "@/utils/time.ts";
-import {usePagination} from "@/hooks/common/usePagination.ts";
+import { useTemplateStore } from "@/store/templateStore.ts";
+import { formatTime, FULL_TIME } from "@/utils/time.ts";
+import { usePagination } from "@/hooks/common/usePagination.ts";
 import ProgressModal from "./progress-modal";
 import DetailModal from "./detail-modal.tsx";
-import {Popconfirm} from "antd";
-import {useRouter} from "@/routes/hooks";
+import { Popconfirm } from "antd";
+import { useRouter } from "@/routes/hooks";
 
 type SearchFormFieldType = Pick<BulkTasks, "name" | "status">;
 
-export const TASK_STATUS_MAP: Record<string, { label: string; color: "default" | "success" | "warning" | "error" | "info" | "cancel" }> = {
+export const TASK_STATUS_MAP: Record<
+	string,
+	{ label: string; color: "default" | "success" | "warning" | "error" | "info" | "cancel" }
+> = {
 	pending: { label: "等待中", color: "warning" },
 	processing: { label: "处理中", color: "info" },
 	completed: { label: "已完成", color: "success" },
@@ -44,7 +47,7 @@ export default function BulkTasksPage() {
 	const [searchParams, setSearchParams] = useState<Partial<SearchFormFieldType>>({});
 	const searchForm = useForm<SearchFormFieldType>({
 		defaultValues: {
-			name: '',
+			name: "",
 			status: undefined,
 		},
 	});
@@ -62,7 +65,7 @@ export default function BulkTasksPage() {
 		},
 		title: "新增任务",
 		show: false,
-		onOk: (data:any) => {
+		onOk: (data: any) => {
 			handleOk(data);
 		},
 		onCancel: () => {
@@ -75,61 +78,59 @@ export default function BulkTasksPage() {
 	}, []);
 
 	useEffect(() => {
-		if (selectedTask && showProgress) {
+		if (selectedTask && (showProgress || showDetail)) {
 			fetchTaskStatus(selectedTask.id); // ⏱ 立即刷新一次任务状态
 		}
-	}, [selectedTask, showProgress]);
+	}, [selectedTask, showProgress, showDetail]);
 
 	const handleOk = async (data: any) => {
-		if(data.id){
-			await taskService.updateTask(data.id, {id: data.id,name: data.name})
-		}else {
+		if (data.id) {
+			await taskService.updateTask(data.id, { id: data.id, name: data.name });
+		} else {
 			const payload: any = {
 				name: data.name,
 				useTemplate: data.useTemplate,
 				taskType: "sms",
 				runAt: data.runAt,
 				intervalMs: data.intervalMs,
-				remark: data.remark
-			}
-			data.useTemplate === 1? payload.templateId = data.templateId: payload.message = data.message
+				remark: data.remark,
+			};
+			data.useTemplate === 1 ? (payload.templateId = data.templateId) : (payload.message = data.message);
 			const formData = new FormData();
 
 			formData.append("file", data.file);
 			formData.append("payload", JSON.stringify(payload));
 
-			console.log(formData)
-			await taskService.createTask(formData)
+			console.log(formData);
+			await taskService.createTask(formData);
 		}
 		setTaskModalProps((prev: any) => ({ ...prev, show: false }));
-		refetch()
-	}
+		refetch();
+	};
 
-	const handleCancel = async (data:any)=>{
-		await taskService.cancelTask(data.id)
-		refetch()
-	}
 	const columns: ColumnsType<BulkTasks> = [
 		{
 			title: "序号",
 			dataIndex: "index",
 			key: "index",
-			render: (_text, _record, index) => {return <span className="text-gray-600">{index + 1}</span>},
+			render: (_text, _record, index) => {
+				return <span className="text-gray-600">{index + 1}</span>;
+			},
 			width: 60,
 		},
 		{ title: "任务名称", dataIndex: "name" },
 		{
 			title: "计划发送",
 			dataIndex: "runAt",
-			render: (text: string) => formatTime(text,FULL_TIME),
-			sorter: (a:any, b:any) => new Date(a.runAt).getTime() - new Date(b.runAt).getTime(),
+			render: (text: string) => formatTime(text, FULL_TIME),
+			sorter: (a: any, b: any) => new Date(a.runAt).getTime() - new Date(b.runAt).getTime(),
 		},
 		{
 			title: "文案来源",
 			dataIndex: "useTemplate",
-			render:(_text, _record: any)=>{
-				if(_text === 1){
-					const templateName = templateOptions.find((opt) => opt.value === _record.templateId)?.label || "-"
+			render: (_text, _record: any) => {
+				if (_text === 1) {
+					const templateName = templateOptions.find((opt) => opt.value === _record.templateId)?.label || "-";
 					return (
 						<div
 							className=" underline font-bold cursor-pointer"
@@ -138,11 +139,11 @@ export default function BulkTasksPage() {
 							<Icon className="mr-2" icon="solar:link-bold" size={14} />
 							{templateName}
 						</div>
-					)
-				}else {
-					return <span>{_record.message}</span>
+					);
+				} else {
+					return <span>{_record.message}</span>;
 				}
-			}
+			},
 		},
 		{ title: "目标数量", dataIndex: "phoneCount" },
 		{ title: "回复数量", dataIndex: "replyCount" },
@@ -159,8 +160,8 @@ export default function BulkTasksPage() {
 			title: "创建时间",
 			dataIndex: "createdAt",
 			width: 180,
-			render: (text: string) => formatTime(text,FULL_TIME),
-			sorter: (a:any, b:any) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+			render: (text: string) => formatTime(text, FULL_TIME),
+			sorter: (a: any, b: any) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
 		},
 		{ title: "备注", dataIndex: "remark" },
 		{
@@ -168,26 +169,23 @@ export default function BulkTasksPage() {
 			key: "operation",
 			align: "center",
 			width: 230,
-			render: (_, record:any) => {
-				return(
+			render: (_, record: any) => {
+				return (
 					<div className="flex w-full justify-center text-gray">
-						{
-							(record.status === "pending" || record.status ==="processing") &&
+						{(record.status === "pending" || record.status === "processing") && (
 							<Popconfirm
 								title="取消确认"
 								description="是否要取消此任务?"
 								okText="是"
 								cancelText="否"
-								onConfirm={()=>handleCancel(record)}
+								onConfirm={() => handleCancel(record)}
 							>
 								<Button variant="ghost" className="bg-error! text-white hover:text-white" size="sm">
 									取消
 								</Button>
 							</Popconfirm>
-
-						}
-						{
-							record.status === "processing" &&
+						)}
+						{record.status === "processing" && (
 							<Button
 								className="ml-2"
 								variant="outline"
@@ -201,7 +199,7 @@ export default function BulkTasksPage() {
 								<Icon icon="solar:refresh-circle-outline" size={18} />
 								查看进度
 							</Button>
-						}
+						)}
 						<Button
 							className="ml-2"
 							variant="outline"
@@ -211,10 +209,11 @@ export default function BulkTasksPage() {
 								setShowDetail(true);
 							}}
 						>
-							<Icon icon="solar:eye-linear" size={18} />详情
+							<Icon icon="solar:eye-linear" size={18} />
+							详情
 						</Button>
 					</div>
-				)
+				);
 			},
 		},
 	];
@@ -237,17 +236,21 @@ export default function BulkTasksPage() {
 	// 	// await taskService.cancelTask(id);
 	// 	refetch();
 	// };
-
-	const fetchTaskStatus = async (id: string) => {
-		const res = await messageService.countConversations({taskId:id})
-		setTaskSuccessCount(res.count)
+	const handleCancel = async (data: any) => {
+		await taskService.cancelTask(data.id);
+		refetch();
 	};
-	const { data,refetch,isLoading  } = useQuery({
-		queryKey: ["tasks",searchParams,pagination],
-		queryFn:()=> taskService.getTaskList({
-			...searchParams,
-			...pagination,
-		}),
+	const fetchTaskStatus = async (id: string) => {
+		const res = await messageService.countConversations({ taskId: id });
+		setTaskSuccessCount(res.count);
+	};
+	const { data, refetch, isLoading } = useQuery({
+		queryKey: ["tasks", searchParams, pagination],
+		queryFn: () =>
+			taskService.getTaskList({
+				...searchParams,
+				...pagination,
+			}),
 	});
 	const onSearch = () => {
 		const values = searchForm.getValues();
@@ -256,9 +259,9 @@ export default function BulkTasksPage() {
 
 	const onSearchFormReset = () => {
 		searchForm.reset();
-		console.log(searchForm.getValues())
+		console.log(searchForm.getValues());
 		setSearchParams({
-			name: '',
+			name: "",
 			status: undefined,
 		}); // 触发一次空条件查询
 	};
@@ -309,14 +312,13 @@ export default function BulkTasksPage() {
 									<FormItem className="flex items-center gap-2">
 										<FormLabel className="w-10 text-right shrink-0">状态</FormLabel>
 										<Select clearable onValueChange={field.onChange} value={field.value}>
-											<SelectTrigger  className="w-[180px]">
+											<SelectTrigger className="w-[180px]">
 												<SelectValue>
-													{
-														!!field.value &&
+													{!!field.value && (
 														<Badge variant={TASK_STATUS_MAP[field.value]?.color}>
 															{TASK_STATUS_MAP[field.value]?.label}
 														</Badge>
-													}
+													)}
 												</SelectValue>
 											</SelectTrigger>
 											<SelectContent>
@@ -338,7 +340,9 @@ export default function BulkTasksPage() {
 								<Button variant="outline" onClick={onSearchFormReset}>
 									重置条件
 								</Button>
-								<Button onClick={onSearch} className="ml-4">查询</Button>
+								<Button onClick={onSearch} className="ml-4">
+									查询
+								</Button>
 							</div>
 						</div>
 					</Form>
@@ -383,6 +387,7 @@ export default function BulkTasksPage() {
 					/>
 
 					<DetailModal
+						successCount={taskSuccessCount}
 						open={showDetail}
 						onClose={() => setShowDetail(false)}
 						task={selectedTask}

@@ -16,13 +16,17 @@ import { cn } from "@/utils";
 import { type CSSProperties, useState } from "react";
 import { useTranslation } from "react-i18next";
 import screenfull from "screenfull";
-import { type ThemeColorPresets, ThemeLayout, ThemeMode } from "#/enum";
+import {
+	type ThemeColorPresets,
+	ThemeLayout,
+	// ThemeMode
+} from "#/enum";
 
 export default function SettingButton() {
 	const { t } = useTranslation();
 	const settings = useSettings();
 	const {
-		themeMode,
+		// themeMode,
 		themeColorPresets,
 		themeLayout,
 		themeStretch,
@@ -77,31 +81,31 @@ export default function SettingButton() {
 				<ScrollArea>
 					<div className="flex flex-col gap-6 p-6">
 						{/* theme mode */}
-						<div>
-							<div className="mb-3 text-base font-semibold text-text-secondary">{t("sys.settings.mode")}</div>
-							<div className="flex flex-row gap-4">
-								<Card
-									onClick={() => updateSettings({ themeMode: ThemeMode.Light })}
-									className="flex flex-1 h-20 cursor-pointer items-center justify-center"
-								>
-									<Icon
-										icon="local:ic-settings-mode-sun"
-										size="24"
-										color={themeMode === ThemeMode.Light ? themeVars.colors.palette.primary.default : ""}
-									/>
-								</Card>
-								<Card
-									onClick={() => updateSettings({ themeMode: ThemeMode.Dark })}
-									className="flex flex-1 h-20 cursor-pointer items-center justify-center"
-								>
-									<Icon
-										icon="local:ic-settings-mode-moon"
-										size="24"
-										color={themeMode === ThemeMode.Dark ? themeVars.colors.palette.primary.default : ""}
-									/>
-								</Card>
-							</div>
-						</div>
+						{/*<div>*/}
+						{/*	<div className="mb-3 text-base font-semibold text-text-secondary">{t("sys.settings.mode")}</div>*/}
+						{/*	<div className="flex flex-row gap-4">*/}
+						{/*		<Card*/}
+						{/*			onClick={() => updateSettings({ themeMode: ThemeMode.Light })}*/}
+						{/*			className="flex flex-1 h-20 cursor-pointer items-center justify-center"*/}
+						{/*		>*/}
+						{/*			<Icon*/}
+						{/*				icon="local:ic-settings-mode-sun"*/}
+						{/*				size="24"*/}
+						{/*				color={themeMode === ThemeMode.Light ? themeVars.colors.palette.primary.default : ""}*/}
+						{/*			/>*/}
+						{/*		</Card>*/}
+						{/*		<Card*/}
+						{/*			onClick={() => updateSettings({ themeMode: ThemeMode.Dark })}*/}
+						{/*			className="flex flex-1 h-20 cursor-pointer items-center justify-center"*/}
+						{/*		>*/}
+						{/*			<Icon*/}
+						{/*				icon="local:ic-settings-mode-moon"*/}
+						{/*				size="24"*/}
+						{/*				color={themeMode === ThemeMode.Dark ? themeVars.colors.palette.primary.default : ""}*/}
+						{/*			/>*/}
+						{/*		</Card>*/}
+						{/*	</div>*/}
+						{/*</div>*/}
 
 						{/* theme layout */}
 						<div>

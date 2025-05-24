@@ -9,7 +9,7 @@ const { VITE_APP_HOMEPAGE: HOMEPAGE } = import.meta.env;
 
 // dashboard
 const WorkbenchPage = lazy(() => import("@/pages/dashboard/workbench"));
-const AnalysisPage = lazy(() => import("@/pages/dashboard/analysis"));
+const AnalysisPage = lazy(() => import("@/pages/dashboard/workbench"));
 
 // message
 const ChatPage = lazy(() => import("@/pages/message/chat"));

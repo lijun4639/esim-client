@@ -11,11 +11,11 @@ export const navData: NavProps["data"] = [
 				path: "/dashboard/workbench",
 				icon: <Icon icon="local:ic-analysis" size="24" />,
 			},
-			{
-				title: "sys.menu.analysis",
-				path: "/dashboard/analysis",
-				icon: <Icon icon="solar:database-linear" size="24" />,
-			},
+			// {
+			// 	title: "sys.menu.analysis",
+			// 	path: "/dashboard/analysis",
+			// 	icon: <Icon icon="solar:database-linear" size="24" />,
+			// },
 		],
 	},
 	{
@@ -39,7 +39,7 @@ export const navData: NavProps["data"] = [
 			{
 				title: "sys.menu.template.group",
 				path: "/template/group",
-				icon: <Icon icon="solar:checklist-minimalistic-linear" size="24" />,
+				icon: <Icon icon="solar:add-folder-outline" size="24" />,
 			},
 			{
 				title: "sys.menu.template.content",
